@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { getFloorShop, scaledCost, ShopItem } from "../data/shop";
-import { addToInventory } from "../data/items";
+import { addToInventory, getItem } from "../data/items";
 import { getClass } from "../data/classes";
 import { soundManager } from "../audio/SoundManager";
 import type { PlayerState } from "./BattleScene";
@@ -94,7 +94,6 @@ export class ShopScene extends Phaser.Scene {
     } else {
       const invStr = this.player.inventory
         .map((inv) => {
-          const { getItem } = require("../data/items");
           const it = getItem(inv.itemId);
           return `${it?.name ?? inv.itemId} ×${inv.quantity}`;
         })

@@ -7,6 +7,7 @@ interface LeaderboardEntry {
   level: number;
   current_floor: number;
   demons_slain: number;
+  is_premium: boolean;
 }
 
 export class LeaderboardScene extends Phaser.Scene {
@@ -135,9 +136,10 @@ export class LeaderboardScene extends Phaser.Scene {
       }
 
       const medal = i === 0 ? "♔ " : i === 1 ? "♕ " : i === 2 ? "♖ " : "";
+      const patronBadge = entry.is_premium ? " ✦" : "";
       const cells = [
         { x: cols[0], t: `${i + 1}`, color: rankColor },
-        { x: cols[1], t: `${medal}${entry.character_name}`, color: "#ecf0f1" },
+        { x: cols[1], t: `${medal}${entry.character_name}${patronBadge}`, color: entry.is_premium ? "#c9a227" : "#ecf0f1" },
         { x: cols[2], t: entry.class, color: classColors[entry.class] ?? "#7f8c8d" },
         { x: cols[3], t: `${entry.level}`, color: "#3498db" },
         { x: cols[4], t: `${entry.current_floor}`, color: "#27ae60" },

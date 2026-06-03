@@ -18,6 +18,7 @@ export interface PlayerState {
   speed: number;
   floor: number;
   gold: number;
+  demonsSlain: number;
   inventory: InventoryItem[];
   skillCooldowns: number[];
   buffNextAttack: boolean;
@@ -71,6 +72,7 @@ export class BattleScene extends Phaser.Scene {
         defendingThisTurn: false,
         skillCooldowns: data.playerState.skillCooldowns ?? [0, 0],
         inventory: data.playerState.inventory ?? [],
+        demonsSlain: data.playerState.demonsSlain ?? 0,
       };
     } else {
       const cls = data.characterClass || "warrior";
@@ -89,6 +91,7 @@ export class BattleScene extends Phaser.Scene {
         speed: stats.speed,
         floor: data.floor || 1,
         gold: 0,
+        demonsSlain: 0,
         inventory: [],
         skillCooldowns: [0, 0],
         buffNextAttack: false,
@@ -432,6 +435,7 @@ export class BattleScene extends Phaser.Scene {
     const dStats = getDemonStats(this.demonState.demon, this.player.floor);
     this.player.experience += dStats.xpReward;
     this.player.gold += dStats.goldReward;
+    this.player.demonsSlain = (this.player.demonsSlain ?? 0) + 1;
 
     // Item drop
     const drop = rollItemDrop(this.player.floor);

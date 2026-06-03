@@ -16,6 +16,7 @@ export default function GamePage() {
   const [user, setUser] = useState<User | null>(null);
   const [savedCharacter, setSavedCharacter] = useState<PlayerState | null>(null);
   const [supabaseReady, setSupabaseReady] = useState(false);
+  const [patronToast, setPatronToast] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export default function GamePage() {
             floor: c.current_floor,
             gold: c.gold,
             inventory: c.inventory ?? [],
+            demonsSlain: c.demons_slain ?? 0,
             skillCooldowns: [0, 0],
             buffNextAttack: false,
             defendingThisTurn: false,
@@ -62,6 +64,10 @@ export default function GamePage() {
     }
 
     init();
+
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("patron") === "success") {
+      setPatronToast(true);
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
@@ -117,6 +123,7 @@ export default function GamePage() {
           current_floor: state.floor,
           gold: state.gold,
           inventory: state.inventory,
+          demons_slain: state.demonsSlain ?? 0,
           last_saved: new Date().toISOString(),
         })
         .eq("id", state.characterId);
@@ -199,6 +206,13 @@ export default function GamePage() {
             <Link href="/auth" style={{ color: "#9b59b6" }}>Sign in</Link>{" "}
             to save your warrior.
           </p>
+        )}
+
+        {patronToast && (
+          <div style={{ marginTop: "16px", padding: "12px 24px", background: "rgba(201,162,39,0.12)", border: "1px solid #c9a227", borderRadius: "6px", color: "#c9a227", fontSize: "14px", textAlign: "center" }}>
+            ✦ Welcome, Abyssal Patron! Your golden status has been applied.
+            <button onClick={() => setPatronToast(false)} style={{ marginLeft: "16px", background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "16px" }}>×</button>
+          </div>
         )}
       </div>
     </main>

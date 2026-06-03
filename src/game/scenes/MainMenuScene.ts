@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { soundManager } from "../audio/SoundManager";
 
 export class MainMenuScene extends Phaser.Scene {
   private stars: Phaser.GameObjects.Arc[] = [];
@@ -107,6 +108,8 @@ export class MainMenuScene extends Phaser.Scene {
       btnText.setColor("#c9a227");
     });
     btn.on("pointerdown", () => {
+      soundManager.init();
+      soundManager.playClick();
       this.cameras.main.fadeOut(500, 0, 0, 0);
       this.cameras.main.once("camerafadeoutcomplete", () => {
         this.scene.start("CharacterSelectScene");
