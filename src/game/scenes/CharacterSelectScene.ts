@@ -1,5 +1,6 @@
 import Phaser from "phaser";
-import { CLASSES, CharacterClass, ClassDefinition } from "../data/classes";
+import { CLASSES, CharacterClass, ClassDefinition, getClass } from "../data/classes";
+import type { PlayerState } from "./BattleScene";
 
 export class CharacterSelectScene extends Phaser.Scene {
   private selectedClass: CharacterClass | null = null;
@@ -19,6 +20,32 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     // Background
     this.add.rectangle(width / 2, height / 2, width, height, 0x0a0a0f);
+
+    // Continue saved character banner
+    const saved = this.registry.get("savedCharacter") as PlayerState | null;
+    if (saved) {
+      const cls = getClass(saved.class);
+      const banner = this.add.rectangle(width / 2, height - 30, width - 40, 38, 0x1a0a2e)
+        .setStrokeStyle(2, cls.color)
+        .setInteractive({ cursor: "pointer" });
+      this.add.text(width / 2, height - 30,
+        `Continue  "${saved.name}"  —  Lv.${saved.level} ${cls.name}  •  Floor ${saved.floor}`, {
+        fontSize: "13px", color: "#" + cls.color.toString(16).padStart(6, "0"),
+        fontFamily: "Georgia, serif", fontStyle: "bold",
+      }).setOrigin(0.5);
+      banner.on("pointerover", () => banner.setFillStyle(0x2d1050));
+      banner.on("pointerout", () => banner.setFillStyle(0x1a0a2e));
+      banner.on("pointerdown", () => {
+        this.cleanupDOM();
+        this.cameras.main.fadeOut(400, 0, 0, 0);
+        this.cameras.main.once("camerafadeoutcomplete", () => {
+          this.scene.start("OverworldScene", {
+            playerState: saved,
+            clearedFloors: this.registry.get("clearedFloors") ?? [],
+          });
+        });
+      });
+    }
 
     // Header
     this.add.text(width / 2, 32, "Choose Your Class", {

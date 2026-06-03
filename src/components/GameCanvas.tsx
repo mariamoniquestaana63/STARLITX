@@ -2,13 +2,21 @@
 
 import { useEffect, useRef } from "react";
 import type { CharacterClass } from "@/game/data/classes";
+import type { PlayerState } from "@/game/scenes/BattleScene";
 
 interface GameCanvasProps {
-  onCharacterCreate?: (name: string, cls: CharacterClass, userId?: string) => Promise<void>;
+  onCharacterCreate?: (name: string, cls: CharacterClass) => Promise<string | null>;
+  onSaveCharacter?: (state: PlayerState) => Promise<void>;
   onFetchLeaderboard?: (cb: (entries: unknown[]) => void) => void;
+  savedCharacter?: PlayerState | null;
 }
 
-export default function GameCanvas({ onCharacterCreate, onFetchLeaderboard }: GameCanvasProps) {
+export default function GameCanvas({
+  onCharacterCreate,
+  onSaveCharacter,
+  onFetchLeaderboard,
+  savedCharacter,
+}: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<import("phaser").Game | null>(null);
 
@@ -25,19 +33,38 @@ export default function GameCanvas({ onCharacterCreate, onFetchLeaderboard }: Ga
       game = new Phaser.Game(config);
       gameRef.current = game;
 
-      // Wire up Supabase events
-      game.events.on("characterCreate", async (name: string, cls: CharacterClass, userId?: string) => {
+      // Pass saved character into the registry so CharacterSelectScene can read it
+      if (savedCharacter) {
+        game.registry.set("savedCharacter", savedCharacter);
+        game.registry.set("clearedFloors", Array.from(
+          { length: savedCharacter.floor - 1 },
+          (_, i) => i + 1
+        ));
+      }
+
+      // Save character state to Supabase after each victory
+      game.events.on("saveCharacter", async (state: PlayerState) => {
+        if (onSaveCharacter) await onSaveCharacter(state);
+      });
+
+      // Called when player creates a new character — returns character DB id
+      game.events.on("characterCreate", async (
+        name: string,
+        cls: CharacterClass,
+        cb: (id: string | null) => void
+      ) => {
         if (onCharacterCreate) {
-          await onCharacterCreate(name, cls, userId);
+          const id = await onCharacterCreate(name, cls);
+          cb(id);
+        } else {
+          cb(null);
         }
       });
 
+      // Leaderboard fetch
       game.events.on("fetchLeaderboard", (cb: (entries: unknown[]) => void) => {
-        if (onFetchLeaderboard) {
-          onFetchLeaderboard(cb);
-        } else {
-          cb([]);
-        }
+        if (onFetchLeaderboard) onFetchLeaderboard(cb);
+        else cb([]);
       });
     })();
 
@@ -45,7 +72,7 @@ export default function GameCanvas({ onCharacterCreate, onFetchLeaderboard }: Ga
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
-  }, [onCharacterCreate, onFetchLeaderboard]);
+  }, []);   // intentionally run once — game instance owns its own state
 
   return (
     <div
