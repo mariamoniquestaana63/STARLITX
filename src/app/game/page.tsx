@@ -131,6 +131,21 @@ export default function GamePage() {
     [supabase]
   );
 
+  const handleSubscribeLeaderboard = useCallback(
+    (emit: (data: unknown[]) => void) => {
+      const channel = supabase
+        .channel("leaderboard-changes")
+        .on("postgres_changes", { event: "*", schema: "public", table: "characters" }, async () => {
+          const { data } = await supabase.from("leaderboard").select("*").limit(20);
+          emit(data || []);
+        })
+        .subscribe();
+
+      return () => { supabase.removeChannel(channel); };
+    },
+    [supabase]
+  );
+
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "#0a0a0f", display: "flex", flexDirection: "column", fontFamily: "Georgia, serif" }}>
       {/* Navbar */}
@@ -174,6 +189,7 @@ export default function GamePage() {
             onCharacterCreate={user ? handleCharacterCreate : undefined}
             onSaveCharacter={user ? handleSaveCharacter : undefined}
             onFetchLeaderboard={handleFetchLeaderboard}
+            onSubscribeLeaderboard={handleSubscribeLeaderboard}
           />
         )}
 

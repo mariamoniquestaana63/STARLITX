@@ -8,6 +8,7 @@ interface GameCanvasProps {
   onCharacterCreate?: (name: string, cls: CharacterClass) => Promise<string | null>;
   onSaveCharacter?: (state: PlayerState) => Promise<void>;
   onFetchLeaderboard?: (cb: (entries: unknown[]) => void) => void;
+  onSubscribeLeaderboard?: (emit: (data: unknown[]) => void) => () => void;
   savedCharacter?: PlayerState | null;
 }
 
@@ -15,6 +16,7 @@ export default function GameCanvas({
   onCharacterCreate,
   onSaveCharacter,
   onFetchLeaderboard,
+  onSubscribeLeaderboard,
   savedCharacter,
 }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,6 +68,18 @@ export default function GameCanvas({
         if (onFetchLeaderboard) onFetchLeaderboard(cb);
         else cb([]);
       });
+
+      // Realtime leaderboard subscription
+      let unsubscribeRealtime: (() => void) | undefined;
+      if (onSubscribeLeaderboard) {
+        unsubscribeRealtime = onSubscribeLeaderboard((data) => {
+          game.events.emit("leaderboardUpdate", data);
+        });
+      }
+
+      return () => {
+        unsubscribeRealtime?.();
+      };
     })();
 
     return () => {
