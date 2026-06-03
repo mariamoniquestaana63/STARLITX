@@ -1,7 +1,8 @@
 import Phaser from "phaser";
 import { CharacterClass, getClass, getScaledStats, xpForLevel } from "../data/classes";
-import { getDemon, getDemonStats, Demon } from "../data/demons";
+import { getDemon, getDemonStats, Demon, DemonEffect } from "../data/demons";
 import { InventoryItem, getItem, rollItemDrop, addToInventory, removeFromInventory } from "../data/items";
+import { soundManager } from "../audio/SoundManager";
 
 export interface PlayerState {
   name: string;
@@ -17,6 +18,7 @@ export interface PlayerState {
   speed: number;
   floor: number;
   gold: number;
+  demonsSlain: number;
   inventory: InventoryItem[];
   skillCooldowns: number[];
   buffNextAttack: boolean;
@@ -70,6 +72,7 @@ export class BattleScene extends Phaser.Scene {
         defendingThisTurn: false,
         skillCooldowns: data.playerState.skillCooldowns ?? [0, 0],
         inventory: data.playerState.inventory ?? [],
+        demonsSlain: data.playerState.demonsSlain ?? 0,
       };
     } else {
       const cls = data.characterClass || "warrior";
@@ -88,6 +91,7 @@ export class BattleScene extends Phaser.Scene {
         speed: stats.speed,
         floor: data.floor || 1,
         gold: 0,
+        demonsSlain: 0,
         inventory: [],
         skillCooldowns: [0, 0],
         buffNextAttack: false,
@@ -302,16 +306,19 @@ export class BattleScene extends Phaser.Scene {
       case "heal_hp": {
         const healed = Math.min(item.value, this.player.maxHealth - this.player.health);
         this.player.health = Math.min(this.player.maxHealth, this.player.health + item.value);
+        soundManager.playHeal();
         this.addLog(`Used ${item.name} — restored ${healed} HP.`);
         break;
       }
       case "heal_mp": {
         this.player.mp = Math.min(this.player.maxMp, this.player.mp + item.value);
+        soundManager.playItemUse();
         this.addLog(`Used ${item.name} — restored ${item.value} MP.`);
         break;
       }
       case "boost_attack": {
         this.player.buffNextAttack = true;
+        soundManager.playItemUse();
         this.addLog(`Used ${item.name} — next attack is empowered!`);
         break;
       }
@@ -332,6 +339,7 @@ export class BattleScene extends Phaser.Scene {
       const crit = this.player.buffNextAttack || Math.random() < (this.player.class === "rogue" ? 0.15 : 0.05);
       const dmg = this.calcDamage(this.player.attack * (crit ? 2 : 1), this.demonState.defense);
       this.player.buffNextAttack = false;
+      soundManager.playAttack();
       this.animatePlayerAttack(() => {
         this.applyDamageToDemon(dmg);
         this.addLog(`${this.player.name} strikes for ${dmg} damage.${crit ? " CRITICAL HIT!" : ""}`);
@@ -359,6 +367,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (skill.effect === "damage") {
       const dmg = this.calcDamage(Math.floor(this.player.attack * skill.multiplier), this.demonState.defense);
+      soundManager.playMagic();
       this.animatePlayerAttack(() => {
         this.applyDamageToDemon(dmg);
         this.addLog(`${this.player.name} uses ${skill.name} for ${dmg} damage!`);
@@ -367,6 +376,7 @@ export class BattleScene extends Phaser.Scene {
     } else if (skill.effect === "heal") {
       const heal = Math.floor(this.player.maxHealth * skill.multiplier);
       this.player.health = Math.min(this.player.maxHealth, this.player.health + heal);
+      soundManager.playHeal();
       this.addLog(`${this.player.name} uses ${skill.name}, restoring ${heal} HP!`);
       this.updateUI();
       this.time.delayedCall(800, () => this.demonAttack());
@@ -378,6 +388,7 @@ export class BattleScene extends Phaser.Scene {
         this.player.defendingThisTurn = true;
         this.addLog(`${this.player.name} activates ${skill.name}!`);
       }
+      soundManager.playClick();
       this.updateUI();
       this.time.delayedCall(800, () => this.demonAttack());
     }
@@ -401,6 +412,13 @@ export class BattleScene extends Phaser.Scene {
     const defFactor = this.player.defendingThisTurn ? 0.5 : 1;
     const dmg = Math.max(1, Math.floor((baseDmg - this.player.defense / 2 + Phaser.Math.Between(-3, 3)) * defFactor));
 
+    if (isSpecial) {
+      soundManager.playDemonSpecial();
+      this.showDemonEffect(140, this.scale.height * 0.48, demon.effect);
+    } else {
+      soundManager.playHit();
+    }
+
     this.animateDemonAttack(() => {
       this.player.health = Math.max(0, this.player.health - dmg);
       this.addLog(`${demon.name} attacks for ${dmg} damage!${isSpecial ? ` (${ability}!)` : ""}`);
@@ -417,6 +435,7 @@ export class BattleScene extends Phaser.Scene {
     const dStats = getDemonStats(this.demonState.demon, this.player.floor);
     this.player.experience += dStats.xpReward;
     this.player.gold += dStats.goldReward;
+    this.player.demonsSlain = (this.player.demonsSlain ?? 0) + 1;
 
     // Item drop
     const drop = rollItemDrop(this.player.floor);
@@ -442,6 +461,9 @@ export class BattleScene extends Phaser.Scene {
       this.player.attack = newStats.attack;
       this.player.defense = newStats.defense;
       this.addLog(`★ LEVEL UP! You are now level ${this.player.level}!`);
+      soundManager.playLevelUp();
+    } else {
+      soundManager.playVictory();
     }
 
     this.player.floor++;
@@ -477,6 +499,7 @@ export class BattleScene extends Phaser.Scene {
   private handleDefeat() {
     const { width, height } = this.scale;
     this.addLog("You have fallen in the Abyss...");
+    soundManager.playDefeat();
     this.game.events.emit("saveCharacter", this.player);
 
     this.time.delayedCall(1200, () => {
@@ -582,6 +605,35 @@ export class BattleScene extends Phaser.Scene {
     this.logMessages.push(message);
     if (this.logMessages.length > 5) this.logMessages.shift();
     this.battleLog.setText(this.logMessages.join("\n"));
+  }
+
+  private showDemonEffect(x: number, y: number, effect: DemonEffect) {
+    const effectColors: Record<DemonEffect, number> = {
+      fire: 0xff4500, shadow: 0x6a0dad, lightning: 0xffff00,
+      poison: 0x39ff14, ice: 0x00bfff, holy: 0xffffff, void: 0x110011, blood: 0xcc0000,
+    };
+    const color = effectColors[effect] ?? 0xff4500;
+
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const g = this.add.graphics().setDepth(15);
+      g.fillStyle(color, 0.9);
+      g.fillCircle(0, 0, effect === "lightning" ? 3 : 5);
+      g.x = x;
+      g.y = y;
+      this.tweens.add({
+        targets: g,
+        x: x + Math.cos(angle) * 50,
+        y: y + Math.sin(angle) * 50,
+        alpha: 0,
+        duration: 450,
+        ease: "Power2",
+        onComplete: () => g.destroy(),
+      });
+    }
+
+    const flash = this.add.rectangle(x, y - 30, 60, 80, color, 0.25).setDepth(14);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 350, onComplete: () => flash.destroy() });
   }
 
   private calcDamage(attack: number, defense: number): number {

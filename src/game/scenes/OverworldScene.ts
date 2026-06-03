@@ -129,6 +129,25 @@ export class OverworldScene extends Phaser.Scene {
       this.scene.start("MainMenuScene");
     });
 
+    // Shop button
+    const shopBtn = this.add.rectangle(width - 72, btnY, 110, 36, 0x1a0a2e)
+      .setInteractive({ cursor: "pointer" })
+      .setStrokeStyle(1, 0x8e44ad);
+    const shopTxt = this.add.text(width - 72, btnY, "⚗ Shop", {
+      fontSize: "13px", color: "#8e44ad", fontFamily: "Georgia, serif", fontStyle: "bold",
+    }).setOrigin(0.5);
+    shopBtn.on("pointerover", () => { shopBtn.setFillStyle(0x2d1050); shopTxt.setColor("#c39bd3"); });
+    shopBtn.on("pointerout", () => { shopBtn.setFillStyle(0x1a0a2e); shopTxt.setColor("#8e44ad"); });
+    shopBtn.on("pointerdown", () => {
+      this.cameras.main.fadeOut(300, 0, 0, 0);
+      this.cameras.main.once("camerafadeoutcomplete", () => {
+        this.scene.start("ShopScene", {
+          playerState: this.sceneData.playerState,
+          clearedFloors: this.sceneData.clearedFloors,
+        });
+      });
+    });
+
     this.cameras.main.fadeIn(500, 0, 0, 0);
   }
 
