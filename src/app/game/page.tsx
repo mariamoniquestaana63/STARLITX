@@ -25,7 +25,6 @@ export default function GamePage() {
       setUser(data.user);
 
       if (data.user) {
-        // Load most recent active character
         const { data: chars } = await supabase
           .from("characters")
           .select("*")
@@ -77,7 +76,6 @@ export default function GamePage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Called when creating a new character — inserts to Supabase and returns id
   const handleCharacterCreate = useCallback(
     async (name: string, cls: CharacterClass): Promise<string | null> => {
       if (!user) return null;
@@ -105,7 +103,6 @@ export default function GamePage() {
     [user, supabase]
   );
 
-  // Called after each victory — upserts character state
   const handleSaveCharacter = useCallback(
     async (state: PlayerState) => {
       if (!user || !state.characterId) return;
@@ -154,34 +151,34 @@ export default function GamePage() {
   );
 
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#0a0a0f", display: "flex", flexDirection: "column", fontFamily: "Georgia, serif" }}>
+    <main style={{ minHeight: "100vh", backgroundColor: "#111", display: "flex", flexDirection: "column", fontFamily: "system-ui, -apple-system, sans-serif", color: "#f0f0f0" }}>
       {/* Navbar */}
-      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", borderBottom: "1px solid #2a1a3a", flexShrink: 0 }}>
+      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
         <Link href="/" style={{ textDecoration: "none" }}>
-          <span style={{ color: "#c9a227", fontSize: "20px", fontWeight: "bold" }}>STARLITX</span>
+          <span style={{ color: "#f0f0f0", fontSize: "18px", fontWeight: "700", letterSpacing: "0.04em" }}>STARLITX</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           {user ? (
             <>
-              <span style={{ color: "#7f8c8d", fontSize: "13px" }}>
+              <span style={{ color: "#888", fontSize: "13px" }}>
                 {user.user_metadata?.username || user.email?.split("@")[0]}
                 {savedCharacter && (
-                  <span style={{ color: "#6c3483", marginLeft: "8px" }}>
-                    • {savedCharacter.name} Lv.{savedCharacter.level}
+                  <span style={{ color: "#a78bfa", marginLeft: "8px" }}>
+                    · {savedCharacter.name} Lv.{savedCharacter.level}
                   </span>
                 )}
               </span>
               <button
                 onClick={() => supabase.auth.signOut()}
-                style={{ background: "transparent", border: "1px solid #2a1a3a", color: "#7f8c8d", padding: "6px 14px", borderRadius: "4px", cursor: "pointer", fontSize: "13px", fontFamily: "Georgia, serif" }}
+                style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "#888", padding: "6px 14px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontFamily: "system-ui, sans-serif" }}
               >
                 Sign Out
               </button>
             </>
           ) : (
             <Link href="/auth" style={{ textDecoration: "none" }}>
-              <button style={{ background: "transparent", border: "1px solid #c9a227", color: "#c9a227", padding: "6px 14px", borderRadius: "4px", cursor: "pointer", fontSize: "13px", fontFamily: "Georgia, serif" }}>
-                Sign In to Save Progress
+              <button style={{ background: "#a78bfa", border: "none", color: "#111", padding: "7px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: "600", fontFamily: "system-ui, sans-serif" }}>
+                Sign In to Save
               </button>
             </Link>
           )}
@@ -201,17 +198,17 @@ export default function GamePage() {
         )}
 
         {!user && (
-          <p style={{ marginTop: "16px", color: "#5d6d7e", fontSize: "12px", textAlign: "center" }}>
+          <p style={{ marginTop: "14px", color: "#555", fontSize: "12px", textAlign: "center" }}>
             Playing as guest — progress won&apos;t be saved.{" "}
-            <Link href="/auth" style={{ color: "#9b59b6" }}>Sign in</Link>{" "}
+            <Link href="/auth" style={{ color: "#a78bfa" }}>Sign in</Link>{" "}
             to save your warrior.
           </p>
         )}
 
         {patronToast && (
-          <div style={{ marginTop: "16px", padding: "12px 24px", background: "rgba(201,162,39,0.12)", border: "1px solid #c9a227", borderRadius: "6px", color: "#c9a227", fontSize: "14px", textAlign: "center" }}>
-            ✦ Welcome, Abyssal Patron! Your golden status has been applied.
-            <button onClick={() => setPatronToast(false)} style={{ marginLeft: "16px", background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "16px" }}>×</button>
+          <div style={{ marginTop: "16px", padding: "12px 24px", background: "rgba(167,139,250,0.12)", border: "1px solid #a78bfa", borderRadius: "8px", color: "#a78bfa", fontSize: "14px", textAlign: "center" }}>
+            Welcome, Abyssal Patron! Your status has been applied.
+            <button onClick={() => setPatronToast(false)} style={{ marginLeft: "16px", background: "none", border: "none", color: "#a78bfa", cursor: "pointer", fontSize: "16px" }}>×</button>
           </div>
         )}
       </div>

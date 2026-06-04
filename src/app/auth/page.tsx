@@ -53,13 +53,13 @@ export default function AuthPage() {
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    padding: "12px 16px",
-    background: "#12121a",
-    border: "1px solid #2a1a3a",
-    borderRadius: "4px",
-    color: "#ecf0f1",
+    padding: "11px 14px",
+    background: "#111",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: "6px",
+    color: "#f0f0f0",
     fontSize: "15px",
-    fontFamily: "Georgia, serif",
+    fontFamily: "system-ui, -apple-system, sans-serif",
     outline: "none",
   };
 
@@ -67,36 +67,37 @@ export default function AuthPage() {
     <main
       style={{
         minHeight: "100vh",
-        backgroundColor: "#0a0a0f",
+        backgroundColor: "#111",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         padding: "24px",
-        fontFamily: "Georgia, serif",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        color: "#f0f0f0",
       }}
     >
       <Link href="/" style={{ textDecoration: "none" }}>
-        <h1 style={{ color: "#c9a227", fontSize: "36px", fontWeight: "bold", marginBottom: "8px", textAlign: "center" }}>
+        <h1 style={{ color: "#f0f0f0", fontSize: "28px", fontWeight: "800", marginBottom: "6px", textAlign: "center", letterSpacing: "0.04em" }}>
           STARLITX
         </h1>
       </Link>
-      <p style={{ color: "#7f8c8d", fontSize: "13px", marginBottom: "40px", fontStyle: "italic" }}>
+      <p style={{ color: "#888", fontSize: "13px", marginBottom: "36px" }}>
         Solomon&apos;s Abyss
       </p>
 
       <div
         style={{
-          background: "#12121a",
-          border: "1px solid #2a1a3a",
-          borderRadius: "6px",
-          padding: "40px",
+          background: "#1a1a1a",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "10px",
+          padding: "36px",
           width: "100%",
-          maxWidth: "420px",
+          maxWidth: "400px",
         }}
       >
         {/* Tab switcher */}
-        <div style={{ display: "flex", marginBottom: "28px", borderBottom: "1px solid #2a1a3a" }}>
+        <div style={{ display: "flex", marginBottom: "28px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           {(["login", "register"] as const).map((m) => (
             <button
               key={m}
@@ -106,13 +107,14 @@ export default function AuthPage() {
                 padding: "10px",
                 background: "transparent",
                 border: "none",
-                borderBottom: mode === m ? "2px solid #c9a227" : "2px solid transparent",
-                color: mode === m ? "#c9a227" : "#7f8c8d",
-                fontSize: "15px",
-                fontFamily: "Georgia, serif",
+                borderBottom: mode === m ? "2px solid #a78bfa" : "2px solid transparent",
+                color: mode === m ? "#a78bfa" : "#888",
+                fontSize: "14px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
                 cursor: "pointer",
                 textTransform: "capitalize",
                 marginBottom: "-1px",
+                fontWeight: mode === m ? "600" : "400",
               }}
             >
               {m === "login" ? "Sign In" : "Register"}
@@ -123,7 +125,7 @@ export default function AuthPage() {
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {mode === "register" && (
             <div>
-              <label style={{ display: "block", color: "#7f8c8d", fontSize: "12px", marginBottom: "6px" }}>
+              <label style={{ display: "block", color: "#888", fontSize: "12px", marginBottom: "6px" }}>
                 Username
               </label>
               <input
@@ -137,7 +139,7 @@ export default function AuthPage() {
             </div>
           )}
           <div>
-            <label style={{ display: "block", color: "#7f8c8d", fontSize: "12px", marginBottom: "6px" }}>
+            <label style={{ display: "block", color: "#888", fontSize: "12px", marginBottom: "6px" }}>
               Email
             </label>
             <input
@@ -150,7 +152,7 @@ export default function AuthPage() {
             />
           </div>
           <div>
-            <label style={{ display: "block", color: "#7f8c8d", fontSize: "12px", marginBottom: "6px" }}>
+            <label style={{ display: "block", color: "#888", fontSize: "12px", marginBottom: "6px" }}>
               Password
             </label>
             <input
@@ -165,35 +167,35 @@ export default function AuthPage() {
           </div>
 
           {error && (
-            <p style={{ color: "#dc2626", fontSize: "13px", textAlign: "center" }}>{error}</p>
+            <p style={{ color: "#f87171", fontSize: "13px", textAlign: "center" }}>{error}</p>
           )}
           {success && (
-            <p style={{ color: "#27ae60", fontSize: "13px", textAlign: "center" }}>{success}</p>
+            <p style={{ color: "#34d399", fontSize: "13px", textAlign: "center" }}>{success}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
             style={{
-              padding: "13px",
-              background: loading ? "#1a1a2e" : "#1a0a2e",
-              border: "2px solid #c9a227",
-              borderRadius: "4px",
-              color: "#c9a227",
-              fontSize: "16px",
-              fontFamily: "Georgia, serif",
-              fontWeight: "bold",
+              padding: "12px",
+              background: loading ? "#333" : "#a78bfa",
+              border: "none",
+              borderRadius: "6px",
+              color: loading ? "#888" : "#111",
+              fontSize: "15px",
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              fontWeight: "700",
               cursor: loading ? "not-allowed" : "pointer",
-              marginTop: "8px",
+              marginTop: "4px",
             }}
           >
-            {loading ? "..." : mode === "login" ? "Enter the Abyss" : "Create Warrior"}
+            {loading ? "..." : mode === "login" ? "Sign In" : "Create Account"}
           </button>
         </form>
 
-        <p style={{ marginTop: "24px", textAlign: "center", fontSize: "13px", color: "#5d6d7e" }}>
-          You can also{" "}
-          <Link href="/game" style={{ color: "#9b59b6", textDecoration: "none" }}>
+        <p style={{ marginTop: "24px", textAlign: "center", fontSize: "13px", color: "#555" }}>
+          Or{" "}
+          <Link href="/game" style={{ color: "#a78bfa", textDecoration: "none" }}>
             play as a guest
           </Link>{" "}
           without an account.
