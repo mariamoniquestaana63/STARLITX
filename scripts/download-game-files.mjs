@@ -17,8 +17,6 @@ const FILES = [
   'src/app/auth/page.tsx',
   'src/app/game/page.tsx',
   'src/app/premium/page.tsx',
-  'src/app/api/checkout/route.ts',
-  'src/app/api/stripe/webhook/route.ts',
   'src/components/GameCanvas.tsx',
   'src/lib/supabase/client.ts',
   'src/lib/supabase/server.ts',
